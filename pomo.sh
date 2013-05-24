@@ -20,6 +20,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+#--- pomo.sh ---
+
+# pomo.sh is a simple Pomodoro timer.  It works by creating a file ($POMO) and
+# inspecting the modification timestamp of that file to determine for how long
+# a Pomodoro block has been running.  Pausing a Pomodoro block works by storing
+# how long the Pomodoro block has been running in the $POMO file.  A paused
+# Pomodoro block can then be resumed by updating the modification timestamp of
+# the POMO file accordingly.
+
 #--- Configuration (can be set via environment variables ---
 
 [[ -n $POMO_FILE ]] && POMO=$POMO_FILE || POMO=$HOME/.local/share/pomo
@@ -179,4 +188,3 @@ fi
 # + README
 # + github
 # + zenity/notify daemon
-# + document
