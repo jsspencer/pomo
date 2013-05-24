@@ -39,7 +39,8 @@ function pomo_stop {
 
 function pomo_pause {
     # Pause a pomo block.
-    pomo_stat > $POMO
+    running=$(pomo_stat)
+    echo $running > $POMO
 }
 
 function pomo_ispaused {
