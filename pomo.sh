@@ -97,22 +97,29 @@ function pomo_clock {
     printf "%2s%02d:%02d" $prefix $min $sec
 }
 
+function pomo_usage {
+    # Print out usage message.
+    echo TODO
+}
+
+actions="start stop pause restart clock usage"
+found=1
+for action in $actions; do
+    if [[ $action == $1 ]]; then
+        found=0
+        break
+    fi
+done
+if [[ found -eq 0 ]]; then
+    pomo_$1
+else
+    pomo_usage
+fi
+
 # TODO:
-# + expose
-#   - start
-#   - stop
-#   - pause
-#   - restart
-#   - clock
-#   - usage
+# + usage
+# + -h option
 # + test pause+restart
 # + README
 # + github
 # + zenity/notify daemon
-
-#pomo_start
-#while true; do
-#    pomo_clock
-#    echo
-#    sleep 1
-#done
