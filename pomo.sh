@@ -1,17 +1,17 @@
 #!/bin/bash
 
 # Copyright (c) 2013, James Spencer.
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,15 +20,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+#--- Configuration (can be set via environment variables ---
+
 [[ -n $POMO_FILE ]] && POMO=$POMO_FILE || POMO=$HOME/.local/share/pomo
 
 [[ -n $POMO_WORK_TIME ]] && WORK_TIME=$POMO_WORK_TIME || WORK_TIME=1
 [[ -n $POMO_BREAK_TIME ]] && BREAK_TIME=$POMO_BREAK_TIME || BREAK_TIME=1
 
-test -e $(dirname $POMO) || mkdir $(dirname $POMO) 
+#--- Pomodoro functions ---
 
 function pomo_start {
     # Start new pomo block (work+break cycle).
+    test -e $(dirname $POMO) || mkdir $(dirname $POMO)
     touch $POMO
 }
 
@@ -145,23 +148,34 @@ POMO_BREAK_TIME
 END
 }
 
+#--- Command-line interface ---
+
+action=
+while getopts h arg; do
+    case $arg in
+        h|?)
+            action=usage
+            ;;
+    esac
+done
+shift $(($OPTIND-1))
+
 actions="start stop pause restart clock usage"
-found=1
-for action in $actions; do
-    if [[ $action == $1 ]]; then
-        found=0
+for act in $actions; do
+    if [[ $act == $1 ]]; then
+        action=$act
         break
     fi
 done
-if [[ found -eq 0 ]]; then
-    pomo_$1
+
+if [[ -n $action ]]; then
+    pomo_$action
 else
-    echo "Unknown option/action: $1"
+    [[ $# -gt 0 ]] && echo "Unknown option/action: $1." || echo "Action not supplied."
     pomo_usage
 fi
 
 # TODO:
-# + -h option
 # + README
 # + github
 # + zenity/notify daemon
