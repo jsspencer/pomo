@@ -65,7 +65,7 @@ function pomo_restart {
     # Restart a paused pomo block by updating the time stamp of the POMO file.
     running=$(pomo_stat)
     mtime=$(date --date "$(date) - $running seconds" +%m%d%H%M.%S)
-    echo > $POMO # erase saved time stamp.
+    rm $POMO # erase saved time stamp.
     touch -m -t $mtime $POMO
 }
 
