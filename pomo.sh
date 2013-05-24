@@ -34,7 +34,7 @@ function pomo_start {
 
 function pomo_stop {
     # Stop pomo cycles.
-    rm $POMO
+    rm -f $POMO
 }
 
 function pomo_pause {
@@ -51,7 +51,7 @@ function pomo_ispaused {
 
 function pomo_restart {
     # Restart a paused pomo block by updating the time stamp of the POMO file.
-    running=$(cat $POMO)
+    running=$(pomo_stat)
     mtime=$(date --date "$(date) - $running seconds" +%m%d%H%M.%S)
     echo > $POMO # erase saved time stamp.
     touch -m -t $mtime $POMO
@@ -70,7 +70,7 @@ function pomo_update {
 
 function pomo_stat {
     # Return number of seconds since start of pomo block (work+break cycle).
-    running=$(cat $POMO)
+    [[ -e $POMO ]] && running=$(cat $POMO) || running=0
     if [[ -z $running ]]; then
         pomo_start=$(stat -c +%Y $POMO)
         now=$(date +%s)
@@ -83,19 +83,23 @@ function pomo_clock {
     # Print out how much time is remaining in block.
     # WMM:SS indicates MM:SS left in the work block.
     # BMM:SS indicates MM:SS left in the break block.
-    pomo_update
-    running=$(pomo_stat)
-    left=$(( WORK_TIME*60 - running ))
-    if [[ $left -lt 0 ]]; then
-        left=$(( left + BREAK_TIME*60 ))
-        prefix=B
+    if [[ -e $POMO ]]; then
+        pomo_update
+        running=$(pomo_stat)
+        left=$(( WORK_TIME*60 - running ))
+        if [[ $left -lt 0 ]]; then
+            left=$(( left + BREAK_TIME*60 ))
+            prefix=B
+        else
+            prefix=W
+        fi
+        pomo_ispaused && prefix=P$prefix
+        min=$(( left / 60 ))
+        sec=$(( left - 60*min ))
+        printf "%2s%02d:%02d" $prefix $min $sec
     else
-        prefix=W
+        printf "  --:--"
     fi
-    pomo_ispaused && prefix=P$prefix
-    min=$(( left / 60 ))
-    sec=$(( left - 60*min ))
-    printf "%2s%02d:%02d" $prefix $min $sec
 }
 
 function pomo_usage {
