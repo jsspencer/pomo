@@ -104,7 +104,45 @@ function pomo_clock {
 
 function pomo_usage {
     # Print out usage message.
-    echo TODO
+    cat <<END
+pomo.sh [-h] [start | stop | pause | restart | clock | usage]
+
+pomo.sh - a simple Pomodoro timer.
+
+Options:
+
+-h
+    Print this usage message.
+
+Actions:
+
+start
+    Start Pomodoro timer.
+stop
+    Stop Pomodoro timer.
+pause
+    Pause Pomodoro timer.
+restart
+    Restart a paused Pomodoro timer.
+clock
+    Print how much time (minutes and seconds) is remaining in the current
+    Pomodoro cycle.  A prefix of B indicates a break period, a prefix of
+    W indicates a work period and a prefix of P indicates the current period is
+    paused.
+usage
+    Print this usage message.
+
+Environment variables:
+
+POMO_FILE
+    Location of the Pomodoro file used to store the duration of the Pomodoro
+    period (mostly using timestamps).  Multiple Pomodoro timers can be run by
+    using different files.  Default: \$HOME/.local/share/pomo.
+POMO_WORK_TIME
+    Duration of the work period in minutes.  Default: 25.
+POMO_BREAK_TIME
+    Duration of the break period in minutes.  Default: 5.
+END
 }
 
 actions="start stop pause restart clock usage"
@@ -118,13 +156,13 @@ done
 if [[ found -eq 0 ]]; then
     pomo_$1
 else
+    echo "Unknown option/action: $1"
     pomo_usage
 fi
 
 # TODO:
-# + usage
 # + -h option
-# + test pause+restart
 # + README
 # + github
 # + zenity/notify daemon
+# + document
