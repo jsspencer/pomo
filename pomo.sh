@@ -74,7 +74,7 @@ function pomo_update {
     running=$(pomo_stat)
     block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
     if [[ $running -gt $block_time ]]; then
-        ago=$((running - block_time))
+        ago=$(( running % block_time )) # We should've started the new cycle a while ago?
         mtime=$(date --date "$(date) - $ago seconds" +%m%d%H%M.%S)
         touch -m -t $mtime $POMO
     fi
