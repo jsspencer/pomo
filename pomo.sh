@@ -114,10 +114,43 @@ function pomo_clock {
     fi
 }
 
+function pomo_notify {
+    if [[ -e $POMO ]]; then
+        break_end_msg='End of a break period.  Time for work!'
+        work_end_msg='End of a work period.  Time for a break!'
+        while true; do
+            pomo_update
+            while true; do
+                running=$(pomo_stat)
+                left=$(( WORK_TIME*60 - running ))
+                work=true
+                if [[ $left -lt 0 ]]; then
+                    left=$(( left + BREAK_TIME*60 ))
+                    work=false
+                fi
+                sleep $left
+                # Check that the block is actually done (i.e. pomo was not
+                # paused whilst we were sleeping).
+                [[ $(pomo_stat) -eq $(( running - left )) ]] && break
+            done
+            if $work; then
+                notify-send Pomodoro "$work_end_msg"
+            else
+                notify-send Pomodoro "$break_end_msg"
+            fi
+            # sleep for a few seconds so that the timestamp of POMO is not the
+            # current time.
+            sleep 2
+        done
+    fi
+}
+
+#--- Help ---
+
 function pomo_usage {
     # Print out usage message.
     cat <<END
-pomo.sh [-h] [start | stop | pause | restart | clock | usage]
+pomo.sh [-h] [start | stop | pause | restart | clock | notify | usage]
 
 pomo.sh - a simple Pomodoro timer.
 
@@ -141,6 +174,10 @@ clock
     Pomodoro cycle.  A prefix of B indicates a break period, a prefix of
     W indicates a work period and a prefix of P indicates the current period is
     paused.
+notify
+    Raise a notification at the end of every Pomodoro work and break block (requires
+    notify-send).   Note that this action (unlike all others) does not
+    terminate and is best run in the background.
 usage
     Print this usage message.
 
@@ -169,7 +206,7 @@ while getopts h arg; do
 done
 shift $(($OPTIND-1))
 
-actions="start stop pause restart clock usage"
+actions="start stop pause restart clock usage notify"
 for act in $actions; do
     if [[ $act == $1 ]]; then
         action=$act
@@ -187,4 +224,3 @@ fi
 # TODO:
 # + README
 # + github
-# + zenity/notify daemon
