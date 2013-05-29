@@ -73,7 +73,7 @@ function pomo_update {
     # Update the time stamp on POMO a new cycle has started.
     running=$(pomo_stat)
     block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
-    if [[ $running -gt $block_time ]]; then
+    if [[ $running -ge $block_time ]]; then
         ago=$(( running % block_time )) # We should've started the new cycle a while ago?
         mtime=$(date --date "$(date) - $ago seconds" +%m%d%H%M.%S)
         touch -m -t $mtime $POMO
@@ -131,16 +131,19 @@ function pomo_notify {
                 sleep $left
                 # Check that the block is actually done (i.e. pomo was not
                 # paused whilst we were sleeping).
-                [[ $(pomo_stat) -eq $(( running - left )) ]] && break
+                stat=$(pomo_stat)
+                [[ $stat -ge $(( running + left )) ]] && break
             done
-            if $work; then
-                notify-send Pomodoro "$work_end_msg"
-            else
-                notify-send Pomodoro "$break_end_msg"
+            if [[ $(( stat - running - left )) -le 1 ]]; then
+                if $work; then
+                    notify-send Pomodoro "$work_end_msg"
+                else
+                    notify-send Pomodoro "$break_end_msg"
+                fi
             fi
-            # sleep for a few seconds so that the timestamp of POMO is not the
-            # current time.
-            sleep 2
+            # sleep for a second so that the timestamp of POMO is not the
+            # current time (i.e. allow next unit to start).
+            sleep 1
         done
     fi
 }
