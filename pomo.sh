@@ -223,7 +223,3 @@ else
     [[ $# -gt 0 ]] && echo "Unknown option/action: $1." || echo "Action not supplied."
     pomo_usage
 fi
-
-# TODO:
-# + README
-# + github
