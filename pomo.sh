@@ -64,7 +64,7 @@ function pomo_ispaused {
 function pomo_restart {
     # Restart a paused pomo block by updating the time stamp of the POMO file.
     running=$(pomo_stat)
-    mtime=$(date --date "$(date) - $running seconds" +%m%d%H%M.%S)
+    mtime=$(date --date "@$(( $(date +%s) - running))" +%m%d%H%M.%S)
     rm $POMO # erase saved time stamp.
     touch -m -t $mtime $POMO
 }
@@ -75,7 +75,7 @@ function pomo_update {
     block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
     if [[ $running -ge $block_time ]]; then
         ago=$(( running % block_time )) # We should've started the new cycle a while ago?
-        mtime=$(date --date "$(date) - $ago seconds" +%m%d%H%M.%S)
+        mtime=$(date --date "@$(( $(date +%s) - ago))" +%m%d%H%M.%S)
         touch -m -t $mtime $POMO
     fi
 }
