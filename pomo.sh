@@ -49,24 +49,27 @@ function pomo_stop {
     rm -f $POMO
 }
 
-function pomo_pause {
-    # Pause a pomo block.
-    running=$(pomo_stat)
-    echo $running > $POMO
-}
-
 function pomo_ispaused {
     # Return 0 if paused, 1 otherwise.
+    # pomo.sh is paused if the POMO file contains any information.
     [[ $(wc -l $POMO | cut -d" " -f1) -gt 0 ]]
     return $?
 }
 
-function pomo_restart {
-    # Restart a paused pomo block by updating the time stamp of the POMO file.
-    running=$(pomo_stat)
-    mtime=$(date --date "@$(( $(date +%s) - running))" +%m%d%H%M.%S)
-    rm $POMO # erase saved time stamp.
-    touch -m -t $mtime $POMO
+function pomo_pause {
+    # Toggle the pause status on the POMO file.
+    if pomo_ispaused; then
+        # Restart a paused pomo block by updating the time stamp of the POMO
+        # file.
+        running=$(pomo_stat)
+        mtime=$(date --date "@$(( $(date +%s) - running))" +%m%d%H%M.%S)
+        rm $POMO # erase saved time stamp.
+        touch -m -t $mtime $POMO
+    else
+        # Pause a pomo block.
+        running=$(pomo_stat)
+        echo $running > $POMO
+    fi
 }
 
 function pomo_update {
@@ -153,7 +156,7 @@ function pomo_notify {
 function pomo_usage {
     # Print out usage message.
     cat <<END
-pomo.sh [-h] [start | stop | pause | restart | clock | notify | usage]
+pomo.sh [-h] [start | stop | pause | clock | notify | usage]
 
 pomo.sh - a simple Pomodoro timer.
 
@@ -169,9 +172,7 @@ start
 stop
     Stop Pomodoro timer.
 pause
-    Pause Pomodoro timer.
-restart
-    Restart a paused Pomodoro timer.
+    Pause a running Pomodoro timer or restart a paused Pomodoro timer.
 clock
     Print how much time (minutes and seconds) is remaining in the current
     Pomodoro cycle.  A prefix of B indicates a break period, a prefix of
@@ -209,7 +210,7 @@ while getopts h arg; do
 done
 shift $(($OPTIND-1))
 
-actions="start stop pause restart clock usage notify"
+actions="start stop pause clock usage notify"
 for act in $actions; do
     if [[ $act == $1 ]]; then
         action=$act
