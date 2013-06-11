@@ -118,6 +118,9 @@ function pomo_clock {
 }
 
 function pomo_notify {
+    # Send a message using notify-send (ie libnotify and notification-daemon)
+    # at the end of each Pomodoro block.  This requires a Pomodoro session to
+    # have already been started...
     if [[ -e $POMO ]]; then
         break_end_msg='End of a break period.  Time for work!'
         work_end_msg='End of a work period.  Time for a break!'
