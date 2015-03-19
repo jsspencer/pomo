@@ -117,6 +117,13 @@ function pomo_clock {
     fi
 }
 
+function pomo_status {
+    while true; do
+        echo $(pomo_clock)
+        sleep 1
+    done
+}
+
 function pomo_notify {
     # Send a message using notify-send (ie libnotify and notification-daemon)
     # at the end of each Pomodoro block.  This requires a Pomodoro session to
@@ -159,7 +166,7 @@ function pomo_notify {
 function pomo_usage {
     # Print out usage message.
     cat <<END
-pomo.sh [-h] [start | stop | pause | clock | notify | usage]
+pomo.sh [-h] [start | stop | pause | clock | status | notify | usage]
 
 pomo.sh - a simple Pomodoro timer.
 
@@ -182,11 +189,16 @@ clock
     W indicates a work period and a prefix of P indicates the current period is
     paused.
 notify
-    Raise a notification at the end of every Pomodoro work and break block (requires
-    notify-send).   Note that this action (unlike all others) does not
-    terminate and is best run in the background.
+    Raise a notification at the end of every Pomodoro work and break block
+    (requires notify-send).
+status
+    Continuously print the current status of the Pomodoro timer once a second,
+    the the same format as the clock action.
 usage
     Print this usage message.
+
+Note that the notify and status actions (unlike all others) do not terminate and
+are best run in the background.
 
 Environment variables:
 
@@ -213,7 +225,7 @@ while getopts h arg; do
 done
 shift $(($OPTIND-1))
 
-actions="start stop pause clock usage notify"
+actions="start stop pause clock usage notify status"
 for act in $actions; do
     if [[ $act == $1 ]]; then
         action=$act
