@@ -30,10 +30,13 @@
 # the POMO file accordingly.
 
 #--- Check environment ---
-if [ -e "/usr/bin/uname" ]; then
-  UNAME="`/usr/bin/uname`"
+if [ "$(uname)" == "Darwin" ] || [ "${POMO_PREFIX_CMDS}" == "true" ]; then
+    # Use GNU coreutils installed with a prefix
+    DATE_CMD="gdate"
+    STAT_CMD="gstat"
 else
-  UNAME="`/bin/uname`"
+    DATE_CMD="date"
+    STAT_CMD="stat"
 fi
 
 #--- Configuration (can be set via environment variables) ---
@@ -70,11 +73,7 @@ function pomo_pause {
         # file.
         running=$(pomo_stat)
 
-        if [ "${UNAME}" == "Darwin" ]; then
-          mtime=$(gdate --date "@$(( $(date +%s) - running))" +%m%d%H%M.%S)
-        else
-          mtime=$(date --date "@$(( $(date +%s) - running))" +%m%d%H%M.%S)
-        fi
+        mtime=$(${DATE_CMD} --date "@$(( $(date +%s) - running))" +%m%d%H%M.%S)
         rm $POMO # erase saved time stamp.
         touch -m -t $mtime $POMO
     else
@@ -90,11 +89,7 @@ function pomo_update {
     block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
     if [[ $running -ge $block_time ]]; then
         ago=$(( running % block_time )) # We should've started the new cycle a while ago?
-        if [ "${UNAME}" == "Darwin" ]; then
-          mtime=$(gdate --date "@$(( $(date +%s) - ago))" +%m%d%H%M.%S)
-        else
-          mtime=$(date --date "@$(( $(date +%s) - ago))" +%m%d%H%M.%S)
-        fi
+        mtime=$(${DATE_CMD} --date "@$(( $(date +%s) - ago))" +%m%d%H%M.%S)
         touch -m -t $mtime $POMO
     fi
 }
@@ -103,13 +98,8 @@ function pomo_stat {
     # Return number of seconds since start of pomo block (work+break cycle).
     [[ -e $POMO ]] && running=$(cat $POMO) || running=0
     if [[ -z $running ]]; then
-        if [ "${UNAME}" == "Darwin" ]; then
-          pomo_start=$(gstat -c +%Y $POMO)
-          now=$(gdate +%s)
-        else
-          pomo_start=$(stat -c +%Y $POMO)
-          now=$(date +%s)
-        fi
+        pomo_start=$(${STAT_CMD} -c +%Y $POMO)
+        now=$(${DATE_CMD} +%s)
         running=$((now-pomo_start))
     fi
     echo $running
@@ -146,8 +136,8 @@ function pomo_status {
 }
 
 function pomo_notify {
-    # Send a message using notify-send (ie libnotify and notification-daemon)
-    # at the end of each Pomodoro block.  This requires a Pomodoro session to
+    # Send a message using the GUI or console at the end of each
+    # Pomodoro block.  This requires a Pomodoro session to
     # have already been started...
     if [[ -e $POMO ]]; then
         break_end_msg='End of a break period.  Time for work!'
@@ -170,27 +160,26 @@ function pomo_notify {
             done
             if [[ $(( stat - running - left )) -le 1 ]]; then
                 if $work; then
-                  if [ "${UNAME}" == "Darwin" ]; then
-                    osascript -e "tell app \"System Events\" to display dialog \"$work_end_msg\"" &> /dev/null
-                  elif which notify-send &> /dev/null; then
-                    notify-send Pomodoro "$work_end_msg"
-                  else
-                    echo "$work_end_msg"
-                  fi
+                    send_msg "$work_end_msg"
                 else
-                  if [ "${UNAME}" == "Darwin" ]; then
-                    osascript -e "tell app \"System Events\" to display dialog \"$break_end_msg\"" &> /dev/null
-                  elif which notify-send &> /dev/null; then
-                    notify-send Pomodoro "$break_end_msg"
-                  else
-                    echo "$break_end_msg"
-                  fi
+                    send_msg "$break_end_msg"
                 fi
             fi
             # sleep for a second so that the timestamp of POMO is not the
             # current time (i.e. allow next unit to start).
             sleep 1
         done
+    fi
+}
+
+
+function send_msg {
+    if [ "$(uname)" == "Darwin" ]; then
+        osascript -e "tell app \"System Events\" to display dialog \"${1}\"" &> /dev/null
+    elif command -v notify-send &> /dev/null; then
+        notify-send Pomodoro "${1}"
+    else
+        echo "${1}"
     fi
 }
 
