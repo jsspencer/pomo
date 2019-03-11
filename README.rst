@@ -90,7 +90,11 @@ using ``%pomo%``.
 Dependencies
 ------------
 
-bash, GNU coreutils (cat, cut, date, printf, sleep, stat, touch, wc).  The notify action also requires  send-notify (supplied by libnotify) and an implementation of notification-daemon.
+bash, GNU coreutils (cat, cut, date, printf, sleep, stat, touch, wc).
+
+On Linux, the notify action also requires  send-notify (supplied by libnotify) and an implementation of notification-daemon.
+
+On MacOS, you can use `homebrew<https://brew.sh/>`_ to install coreutils.
 
 License
 -------
