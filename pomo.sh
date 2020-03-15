@@ -153,10 +153,15 @@ function pomo_notify {
                     work=false
                 fi
                 sleep $left
-                # Check that the block is actually done (i.e. pomo was not
-                # paused whilst we were sleeping).
+		# pomo_stat is time from the start of the work+block cycle.
+		# 1. If switching from work->break then stat > running.
+		# 2. If switching from break ->work then either stat > running
+		# (haven't updated timestamp) or stat < running (have just
+		# updated the timestamp from a separate pomo call, e.g. using
+		# pomo status).
                 stat=$(pomo_stat)
                 [[ $stat -ge $(( running + left )) ]] && break
+                $work || [[ $stat -lt $running ]] && break
             done
             if [[ $(( stat - running - left )) -le 1 ]]; then
                 if $work; then
