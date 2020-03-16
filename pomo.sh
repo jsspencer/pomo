@@ -139,10 +139,10 @@ function pomo_notify {
     # Send a message using the GUI or console at the end of each
     # Pomodoro block.  This requires a Pomodoro session to
     # have already been started...
-    if [[ -e $POMO ]]; then
-        break_end_msg='End of a break period.  Time for work!'
-        work_end_msg='End of a work period.  Time for a break!'
-        while true; do
+    break_end_msg='End of a break period.  Time for work!'
+    work_end_msg='End of a work period.  Time for a break!'
+    while true; do
+        if [[ -e $POMO ]]; then
             pomo_update
             while true; do
                 running=$(pomo_stat)
@@ -153,12 +153,12 @@ function pomo_notify {
                     work=false
                 fi
                 sleep $left
-		# pomo_stat is time from the start of the work+block cycle.
-		# 1. If switching from work->break then stat > running.
-		# 2. If switching from break ->work then either stat > running
-		# (haven't updated timestamp) or stat < running (have just
-		# updated the timestamp from a separate pomo call, e.g. using
-		# pomo status).
+                # pomo_stat is time from the start of the work+block cycle.
+                # 1. If switching from work->break then stat > running.
+                # 2. If switching from break ->work then either stat > running
+                #    (haven't updated timestamp) or stat < running (have just
+                #    updated the timestamp from a separate pomo call, e.g.
+                #    using pomo status).
                 stat=$(pomo_stat)
                 [[ $stat -ge $(( running + left )) ]] && break
                 $work || [[ $stat -lt $running ]] && break
@@ -173,8 +173,10 @@ function pomo_notify {
             # sleep for a second so that the timestamp of POMO is not the
             # current time (i.e. allow next unit to start).
             sleep 1
-        done
-    fi
+        else
+            sleep 60
+        fi
+    done
 }
 
 
@@ -216,11 +218,11 @@ clock
     W indicates a work period and a prefix of P indicates the current period is
     paused.
 notify
-    Raise a notification at the end of every Pomodoro work and break block
-    (requires notify-send).
+    Raise a notification at the end of every Pomodoro work and break block in
+    an infinite loop.  Requires notify-send (linux) or osascript (OS X).
 status
     Continuously print the current status of the Pomodoro timer once a second,
-    the the same format as the clock action.
+    in the same format as the clock action.
 usage
     Print this usage message.
 
