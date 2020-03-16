@@ -50,19 +50,19 @@ fi
 
 function pomo_start {
     # Start new pomo block (work+break cycle).
-    test -e $(dirname $POMO) || mkdir $(dirname $POMO)
-    touch $POMO
+    test -e "$(dirname -- "$POMO")" || mkdir "$(dirname -- "$POMO")"
+    touch "$POMO"
 }
 
 function pomo_stop {
     # Stop pomo cycles.
-    rm -f $POMO
+    rm -f "$POMO"
 }
 
 function pomo_ispaused {
     # Return 0 if paused, 1 otherwise.
     # pomo.sh is paused if the POMO file contains any information.
-    [[ $(wc -l $POMO | cut -d" " -f1) -gt 0 ]]
+    [[ $(wc -l "$POMO" | cut -d" " -f1) -gt 0 ]]
     return $?
 }
 
@@ -74,12 +74,12 @@ function pomo_pause {
         running=$(pomo_stat)
 
         mtime=$(${DATE_CMD} --date "@$(( $(date +%s) - running))" +%m%d%H%M.%S)
-        rm $POMO # erase saved time stamp.
-        touch -m -t $mtime $POMO
+        rm "$POMO" # erase saved time stamp.
+        touch -m -t "$mtime" "$POMO"
     else
         # Pause a pomo block.
         running=$(pomo_stat)
-        echo $running > $POMO
+        echo "$running" > "$POMO"
     fi
 }
 
@@ -90,15 +90,15 @@ function pomo_update {
     if [[ $running -ge $block_time ]]; then
         ago=$(( running % block_time )) # We should've started the new cycle a while ago?
         mtime=$(${DATE_CMD} --date "@$(( $(date +%s) - ago))" +%m%d%H%M.%S)
-        touch -m -t $mtime $POMO
+        touch -m -t "$mtime" "$POMO"
     fi
 }
 
 function pomo_stat {
     # Return number of seconds since start of pomo block (work+break cycle).
-    [[ -e $POMO ]] && running=$(cat $POMO) || running=0
+    [[ -e "$POMO" ]] && running=$(cat "$POMO") || running=0
     if [[ -z $running ]]; then
-        pomo_start=$(${STAT_CMD} -c +%Y $POMO)
+        pomo_start=$(${STAT_CMD} -c +%Y "$POMO")
         now=$(${DATE_CMD} +%s)
         running=$((now-pomo_start))
     fi
@@ -109,7 +109,7 @@ function pomo_clock {
     # Print out how much time is remaining in block.
     # WMM:SS indicates MM:SS left in the work block.
     # BMM:SS indicates MM:SS left in the break block.
-    if [[ -e $POMO ]]; then
+    if [[ -e "$POMO" ]]; then
         pomo_update
         running=$(pomo_stat)
         left=$(( WORK_TIME*60 - running ))
@@ -130,7 +130,7 @@ function pomo_clock {
 
 function pomo_status {
     while true; do
-        echo $(pomo_clock)
+        pomo_clock
         sleep 1
     done
 }
@@ -252,18 +252,18 @@ while getopts h arg; do
             ;;
     esac
 done
-shift $(($OPTIND-1))
+shift $((OPTIND-1))
 
 actions="start stop pause clock usage notify status"
 for act in $actions; do
-    if [[ $act == $1 ]]; then
+    if [[ $act == "$1" ]]; then
         action=$act
         break
     fi
 done
 
 if [[ -n $action ]]; then
-    pomo_$action
+    pomo_"$action"
 else
     [[ $# -gt 0 ]] && echo "Unknown option/action: $1." || echo "Action not supplied."
     pomo_usage
