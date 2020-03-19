@@ -51,6 +51,7 @@ fi
 function pomo_start {
     # Start new pomo block (work+break cycle).
     test -e "$(dirname -- "$POMO")" || mkdir "$(dirname -- "$POMO")"
+    :> "$POMO" # remove saved time stamp due to a pause.
     touch "$POMO"
 }
 
@@ -74,7 +75,7 @@ function pomo_pause {
         running=$(pomo_stat)
 
         mtime=$(${DATE_CMD} --date "@$(( $(date +%s) - running))" +%m%d%H%M.%S)
-        rm "$POMO" # erase saved time stamp.
+        :> "$POMO" # erase saved time stamp due to a pause.
         touch -m -t "$mtime" "$POMO"
     else
         # Pause a pomo block.
