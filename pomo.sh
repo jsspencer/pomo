@@ -63,7 +63,7 @@ function pomo_stop {
 function pomo_ispaused {
     # Return 0 if paused, 1 otherwise.
     # pomo.sh is paused if the POMO file contains any information.
-    [[ $(wc -l "$POMO" | sed 's/^ *//' | cut -d" " -f1) -gt 0 ]]
+    [[ $(wc -l < "$POMO") -gt 0 ]]
     return $?
 }
 
