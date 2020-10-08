@@ -102,6 +102,7 @@ Add pomo as a new polybar module to your polybar config::
     type = custom/script
     interval = 1
     exec = pomo.sh clock
+    click-left = pomo.sh pause
 
 
 Then add it to your module definition, e.g. ::
