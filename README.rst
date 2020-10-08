@@ -73,19 +73,41 @@ using notification-daemon and send-notify.  This involves pomo.sh sleeping until
 
 $ pomo.sh notify &
 
-The clock command is ideal for running from inside xmobar, e.g. in the xmobar
-configuration file::
+Status Bars
+-----------
+
+The clock command is ideal for integrating `pomo.sh` with various status bars. Some examples can be found below.
+
+xmobar
+******
+
+Add the following to your xmobar configuration::
 
     Config {
-        commands = [
-            -- rest of commands
-            , Run Com "pomo.sh" ["clock"] "pomo" 10"
-            ]
-        -- rest of config
+       commands = [
+          ...
+          , Run Com "pomo.sh" ["clock"] "pomo" "10"
+       ]
     }
 
 The output of the clock command can then be inserted into the xmobar template
 using ``%pomo%``.
+
+polybar
+^^^^^^
+
+Add pomo as a new polybar module to your polybar config::
+
+    [module/pomo]
+    type = custom/script
+    interval = 1
+    exec = pomo.sh clock
+    click-left = pomo.sh pause
+
+
+Then add it to your module definition, e.g. ::
+
+    modules-right = date pomo
 
 Dependencies
 ------------
