@@ -60,6 +60,14 @@ function pomo_stop {
     rm -f "$POMO"
 }
 
+function pomo_stamp {
+    # Set the timestamp of the POMO file to $1 seconds ago.
+    ago=$1
+    mtime=$(${DATE_CMD} --date "@$(( $(date +%s) - ago))" +%m%d%H%M.%S)
+    :> "$POMO" # erase saved time stamp due to a pause.
+    touch -m -t "$mtime" "$POMO"
+}
+
 function pomo_ispaused {
     # Return 0 if paused, 1 otherwise.
     # pomo.sh is paused if the POMO file contains any information.
@@ -69,17 +77,13 @@ function pomo_ispaused {
 
 function pomo_pause {
     # Toggle the pause status on the POMO file.
+    running=$(pomo_stat)
     if pomo_ispaused; then
         # Restart a paused pomo block by updating the time stamp of the POMO
         # file.
-        running=$(pomo_stat)
-
-        mtime=$(${DATE_CMD} --date "@$(( $(date +%s) - running))" +%m%d%H%M.%S)
-        :> "$POMO" # erase saved time stamp due to a pause.
-        touch -m -t "$mtime" "$POMO"
+        pomo_stamp "$running"
     else
         # Pause a pomo block.
-        running=$(pomo_stat)
         echo "$running" > "$POMO"
     fi
 }
@@ -136,41 +140,47 @@ function pomo_status {
     done
 }
 
-function pomo_notify {
-    # Send a message using the GUI or console at the end of each
-    # Pomodoro block.  This requires a Pomodoro session to
+function pomo_msg {
+    # Send a message using the GUI or console at the end of the next
+    # work or break block.  This requires a Pomodoro session to
     # have already been started...
-    break_end_msg='End of a break period.  Time for work!'
-    work_end_msg='End of a work period.  Time for a break!'
+    break_end_msg='End of a break period. Time for work!'
+    work_end_msg='End of a work period. Time for a break!'
+    [[ -e "$POMO" ]] || return 1
+    pomo_update
+    running=$(pomo_stat)
     while true; do
-        if [[ -e $POMO ]]; then
-            pomo_update
-            while true; do
-                running=$(pomo_stat)
-                left=$(( WORK_TIME*60 - running ))
-                work=true
-                if [[ $left -lt 0 ]]; then
-                    left=$(( left + BREAK_TIME*60 ))
-                    work=false
-                fi
-                sleep $left
-                # pomo_stat is time from the start of the work+block cycle.
-                # 1. If switching from work->break then stat >= running + left.
-                # 2. If switching from break->work then either
-                #    stat >= running + left (haven't updated timestamp) or
-                #    stat < running (have just updated the timestamp from a
-                #    separate pomo call, e.g. using pomo status).
-                stat=$(pomo_stat)
-                [[ $stat -ge $(( running + left )) ]] && break
-                $work || { [[ $stat -lt $running ]] && break; }
-            done
-            if [[ $(( stat - running - left )) -le 1 ]]; then
-                if $work; then
-                    send_msg "$work_end_msg"
-                else
-                    send_msg "$break_end_msg"
-                fi
-            fi
+        left=$(( WORK_TIME*60 - running ))
+        work=true
+        if [[ $left -lt 0 ]]; then
+            left=$(( left + BREAK_TIME*60 ))
+            work=false
+        fi
+        sleep $left
+        # pomo_stat is time from the start of the work+block cycle.
+        # 1. If switching from work->break then stat >= running + left.
+        # 2. If switching from break->work then either
+        #    stat >= running + left (haven't updated timestamp) or
+        #    stat < running (have just updated the timestamp from a
+        #    separate pomo call, e.g. using pomo status).
+        stat=$(pomo_stat)
+        [[ $stat -ge $(( running + left )) ]] && break
+        $work || { [[ $stat -lt $running ]] && break; }
+        running=$stat
+    done
+    if [[ $(( stat - running - left )) -le 1 ]]; then
+        if $work; then
+            send_msg "$work_end_msg"
+        else
+            send_msg "$break_end_msg"
+        fi
+    fi
+    return 0
+}
+
+function pomo_notify {
+    while true; do
+        if pomo_msg; then
             # sleep for a second so that the timestamp of POMO is not the
             # current time (i.e. allow next unit to start).
             sleep 1
@@ -179,7 +189,6 @@ function pomo_notify {
         fi
     done
 }
-
 
 function send_msg {
     if [ "$(uname)" == "Darwin" ]; then
