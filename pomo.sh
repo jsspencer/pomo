@@ -60,6 +60,14 @@ function pomo_stop {
     rm -f "$POMO"
 }
 
+function pomo_stamp {
+    # Set the timestamp of the POMO file to $1 seconds ago.
+    ago=$1
+    mtime=$(${DATE_CMD} --date "@$(( $(date +%s) - ago))" +%m%d%H%M.%S)
+    :> "$POMO" # erase saved time stamp due to a pause.
+    touch -m -t "$mtime" "$POMO"
+}
+
 function pomo_ispaused {
     # Return 0 if paused, 1 otherwise.
     # pomo.sh is paused if the POMO file contains any information.
@@ -69,17 +77,13 @@ function pomo_ispaused {
 
 function pomo_pause {
     # Toggle the pause status on the POMO file.
+    running=$(pomo_stat)
     if pomo_ispaused; then
         # Restart a paused pomo block by updating the time stamp of the POMO
         # file.
-        running=$(pomo_stat)
-
-        mtime=$(${DATE_CMD} --date "@$(( $(date +%s) - running))" +%m%d%H%M.%S)
-        :> "$POMO" # erase saved time stamp due to a pause.
-        touch -m -t "$mtime" "$POMO"
+        pomo_stamp "$running"
     else
         # Pause a pomo block.
-        running=$(pomo_stat)
         echo "$running" > "$POMO"
     fi
 }
