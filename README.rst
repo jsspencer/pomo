@@ -1,6 +1,8 @@
 pomo.sh
 =======
 
+.. image:: https://github.com/jsspencer/pomo/workflows/CI/badge.svg
+
 pomo.sh is a simple `Pomodoro
 <http://en.wikipedia.org/wiki/Pomodoro_Technique>`_ timer written in bash with
 minimal dependencies.  It is designed to be easy to use from the command-line
