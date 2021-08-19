@@ -65,9 +65,41 @@ function notify-send() {
     [[ "$status" -eq 0 ]]
 }
 
-@test "pomo_ispaused is false when paused" {
+@test "pomo_ispaused is false when running" {
     run pomo_start
     run pomo_ispaused
+    [[ "$status" -eq 1 ]]
+}
+
+@test "pomo_ispaused is false when stopped" {
+    run pomo_start
+    run pomo_stop
+    run pomo_ispaused
+    [[ "$status" -eq 1 ]]
+}
+
+@test "pomo_isstopped is true when stopped" {
+    run pomo_start
+    run pomo_stop
+    run pomo_isstopped
+    [[ "$status" -eq 0 ]]
+}
+
+@test "pomo_isstopped is true before first run of pomo" {
+    run pomo_isstopped
+    [[ "$status" -eq 0 ]]
+}
+
+@test "pomo_isstopped is false when running" {
+    run pomo_start
+    run pomo_isstopped
+    [[ "$status" -eq 1 ]]
+}
+
+@test "pomo_isstopped is false when paused" {
+    run pomo_start
+    run pomo_pause
+    run pomo_isstopped
     [[ "$status" -eq 1 ]]
 }
 
@@ -118,8 +150,15 @@ function notify-send() {
 }
 
 @test "pomo_pause creates file if it was stopped before" {
-    [[ ! -e $POMO_FILE ]]
     run pomo_start
+    run pomo_stop
+    run pomo_pause
+    [[ -e $POMO_FILE ]]
+}
+
+@test "pomo_pause creates file before first run of pomo" {
+    [[ ! -e $POMO_FILE ]]
+    run pomo_pause
     [[ -e $POMO_FILE ]]
 }
 
