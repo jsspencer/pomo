@@ -65,7 +65,7 @@ function notify-send() {
     [[ "$status" -eq 0 ]]
 }
 
-@test "pomo_ispaused is false when running" {
+@test "pomo_ispaused is false when started" {
     run pomo_start
     run pomo_ispaused
     [[ "$status" -eq 1 ]]
@@ -90,7 +90,7 @@ function notify-send() {
     [[ "$status" -eq 0 ]]
 }
 
-@test "pomo_isstopped is false when running" {
+@test "pomo_isstopped is false when started" {
     run pomo_start
     run pomo_isstopped
     [[ "$status" -eq 1 ]]
