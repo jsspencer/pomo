@@ -117,6 +117,12 @@ function notify-send() {
     [[ "$output" -eq 1205 ]]
 }
 
+@test "pomo_pause creates file if it was stopped before" {
+    [[ ! -e $POMO_FILE ]]
+    run pomo_start
+    [[ -e $POMO_FILE ]]
+}
+
 @test "pomo_update does not update the POMO file if not required" {
     run pomo_stamp 33
     run "${STAT_CMD}" -c %Y "$POMO"

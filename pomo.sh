@@ -55,6 +55,13 @@ function pomo_start {
     touch "$POMO"
 }
 
+function pomo_isstopped {
+    # Return 0 if stopped, 1 otherwise.
+    # pomo.sh is stopped if the POMO file does not exist.
+    [[ ! -e "$POMO" ]]
+    return $?
+}
+
 function pomo_stop {
     # Stop pomo cycles.
     rm -f "$POMO"
@@ -78,8 +85,8 @@ function pomo_ispaused {
 function pomo_pause {
     # Toggle the pause status on the POMO file.
     running=$(pomo_stat)
-    if pomo_ispaused; then
-        # Restart a paused pomo block by updating the time stamp of the POMO
+    if pomo_isstopped || pomo_ispaused; then
+        # Restart a stopped/paused pomo block by updating the time stamp of the POMO
         # file.
         pomo_stamp "$running"
     else
@@ -114,7 +121,7 @@ function pomo_clock {
     # Print out how much time is remaining in block.
     # WMM:SS indicates MM:SS left in the work block.
     # BMM:SS indicates MM:SS left in the break block.
-    if [[ -e "$POMO" ]]; then
+    if ! pomo_isstopped; then
         pomo_update
         running=$(pomo_stat)
         left=$(( WORK_TIME*60 - running ))
