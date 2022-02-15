@@ -37,6 +37,10 @@ function _pomo_msg_helper() {
 # Mocks
 function notify-send() {
     # Mock notify-send to echo.
+    # We set the app-name to notify send using -a, which is not a valid option
+    # for echo. Remove the flag and pass everything (app name and message) to
+    # echo.
+    shift
     echo "$@"
 }
 
