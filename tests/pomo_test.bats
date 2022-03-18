@@ -4,6 +4,7 @@ function setup() {
     POMO_DIR=$(mktemp --directory --tmpdir="$BATS_RUN_TMPDIR")
     export POMO_DIR
     export POMO_FILE=$POMO_DIR/pomo
+    export POMO_CONFIG=$POMO_DIR/pomo.cfg
     source pomo.sh
 }
 

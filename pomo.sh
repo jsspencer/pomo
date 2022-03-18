@@ -39,13 +39,6 @@ else
     STAT_CMD="stat"
 fi
 
-#--- Configuration (can be set via environment variables) ---
-
-[[ -n $POMO_FILE ]] && POMO=$POMO_FILE || POMO=$HOME/.local/share/pomo
-
-[[ -n $POMO_WORK_TIME ]] && WORK_TIME=$POMO_WORK_TIME || WORK_TIME=25
-[[ -n $POMO_BREAK_TIME ]] && BREAK_TIME=$POMO_BREAK_TIME || BREAK_TIME=5
-
 #--- Pomodoro functions ---
 
 function pomo_start {
@@ -212,12 +205,14 @@ function send_msg {
 function pomo_usage {
     # Print out usage message.
     cat <<END
-pomo.sh [-h] [start | stop | pause | clock | status | notify | usage]
+pomo.sh [-h] [-c file] [start | stop | pause | clock | status | notify | usage]
 
 pomo.sh - a simple Pomodoro timer.
 
 Options:
 
+-c file
+    Specify the path to the config file containing variable definitions.
 -h
     Print this usage message.
 
@@ -248,6 +243,9 @@ are best run in the background.
 
 Environment variables:
 
+POMO_CONFIG
+    Location of the config file. Default: \$XDG_CONFIG_HOME/pomo.cfg. Can also
+    be set using the -c option.
 POMO_FILE
     Location of the Pomodoro file used to store the duration of the Pomodoro
     period (mostly using timestamps).  Multiple Pomodoro timers can be run by
@@ -256,14 +254,21 @@ POMO_WORK_TIME
     Duration of the work period in minutes.  Default: 25.
 POMO_BREAK_TIME
     Duration of the break period in minutes.  Default: 5.
+
+The POMO_FILE, POMO_WORK_TIME and POMO_BREAK_TIME variables can also be set in
+POMO_CONFIG, which is sourced if it exists.
 END
 }
 
 #--- Command-line interface ---
 
 action=
-while getopts h arg; do
+config=${POMO_CONFIG:-"$XDG_CONFIG_HOME/pomo.cfg"}
+while getopts "hc:" arg; do
     case $arg in
+	c)
+	    config=$OPTARG
+	    ;;
         h|?)
             action=usage
             ;;
@@ -278,6 +283,15 @@ for act in $actions; do
         break
     fi
 done
+
+#--- Configuration (can be set via environment variables) ---
+
+[[ -e ${config} ]] && source "${config}"
+POMO=${POMO_FILE:-"$HOME/.local/share/pomo"}
+WORK_TIME=${POMO_WORK_TIME:-25}
+BREAK_TIME=${POMO_BREAK_TIME:-5}
+
+#--- Run! ---
 
 if [[ -n $action ]]; then
     pomo_"$action"
