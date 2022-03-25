@@ -144,8 +144,6 @@ function pomo_msg {
     # Send a message using the GUI or console at the end of the next
     # work or break block.  This requires a Pomodoro session to
     # have already been started...
-    break_end_msg='End of a break period. Time for work!'
-    work_end_msg='End of a work period. Time for a break!'
     [[ -e "$POMO" ]] || return 1
     pomo_update
     running=$(pomo_stat)
@@ -170,9 +168,9 @@ function pomo_msg {
     done
     if [[ $(( stat - running - left )) -le 1 ]]; then
         if $work; then
-            send_msg "$work_end_msg"
+            $MSG_CALLBACK 0  # end of work block
         else
-            send_msg "$break_end_msg"
+            $MSG_CALLBACK 1  # end of break block
         fi
     fi
     return 0
@@ -188,6 +186,19 @@ function pomo_notify {
             sleep 60
         fi
     done
+}
+
+function pomo_msg_callback {
+    block_type=$1
+    if [[ $block_type -eq 0 ]]; then
+        msg='End of a work period. Time for a break!'
+    elif [[ $block_type -eq 1 ]]; then
+        msg='End of a break period. Time for work!'
+    else
+        echo "Unknown block type"
+        exit 1
+    fi
+    send_msg "$msg"
 }
 
 function send_msg {
@@ -254,9 +265,12 @@ POMO_WORK_TIME
     Duration of the work period in minutes.  Default: 25.
 POMO_BREAK_TIME
     Duration of the break period in minutes.  Default: 5.
+POMO_MSG_CALLBACK
+   Function to call at the end of a period, with argument of 0 for end of a
+   work period and 1 for the end of a break period. Default: pomo_msg_callback.
 
-The POMO_FILE, POMO_WORK_TIME and POMO_BREAK_TIME variables can also be set in
-POMO_CONFIG, which is sourced if it exists.
+Environment variables other than POMO_CONFIG can also be set in POMO_CONFIG,
+which is sourced if it exists.
 END
 }
 
@@ -290,6 +304,7 @@ done
 POMO=${POMO_FILE:-"$HOME/.local/share/pomo"}
 WORK_TIME=${POMO_WORK_TIME:-25}
 BREAK_TIME=${POMO_BREAK_TIME:-5}
+MSG_CALLBACK=${POMO_MSG_CALLBACK:-pomo_msg_callback}
 
 #--- Run! ---
 
