@@ -43,7 +43,7 @@ fi
 
 function pomo_start {
     # Start new pomo block (work+break cycle).
-    test -e "$(dirname -- "$POMO")" || mkdir "$(dirname -- "$POMO")"
+    test -e "$(dirname -- "$POMO")" || mkdir -p "$(dirname -- "$POMO")"
     :> "$POMO" # remove saved time stamp due to a pause.
     touch "$POMO"
 }
