@@ -277,7 +277,8 @@ END
 #--- Command-line interface ---
 
 action=
-config=${POMO_CONFIG:-"$XDG_CONFIG_HOME/pomo.cfg"}
+config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
+config=${POMO_CONFIG:-"$config_home/pomo.cfg"}
 while getopts "hc:" arg; do
     case $arg in
 	c)
