@@ -21,6 +21,7 @@ function _pomo_msg_helper() {
     expected_duration=$1
     # duplicate first fake stat time as pomo_msg calls pomo_update once at initialisation.
     stat_times=( "$2" "${@:2}" )
+    stat_times=( "$2" "$2" "$3" "$3" "$4" "$4" )
     # Set iteration in a file as pomo_msg is run by BATS in a subshell.
     iteration_file=$(mktemp --tmpdir="$BATS_RUN_TMPDIR")
     echo 0 > "$iteration_file"
@@ -209,16 +210,6 @@ function notify-send() {
 
 @test "pomo_msg sends message about end of break block" {
     _pomo_msg_helper 5 $(( (WORK_TIME+BREAK_TIME)*60-5)) $(( (WORK_TIME+BREAK_TIME)*60))
-    [[ "$output" == "Pomodoro End of a break period. Time for work!" ]]
-}
-
-@test "pomo_msg handles timestamp update before it can send the end of break message 1" {
-    _pomo_msg_helper 5 $(( (WORK_TIME+BREAK_TIME)*60-5)) 0
-    [[ "$output" == "Pomodoro End of a break period. Time for work!" ]]
-}
-
-@test "pomo_msg handles timestamp update before it can send the end of break message 2" {
-    _pomo_msg_helper 5 $(( (WORK_TIME+BREAK_TIME)*60-5)) 1
     [[ "$output" == "Pomodoro End of a break period. Time for work!" ]]
 }
 

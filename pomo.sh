@@ -161,6 +161,7 @@ function pomo_msg {
         #    stat >= running + left (haven't updated timestamp) or
         #    stat < running (have just updated the timestamp from a
         #    separate pomo call, e.g. using pomo status).
+        pomo_update
         stat=$(pomo_stat)
         [[ $stat -ge $(( running + left )) ]] && break
         $work || { [[ $stat -lt $running ]] && break; }
