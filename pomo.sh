@@ -29,16 +29,6 @@
 # Pomodoro block can then be resumed by updating the modification timestamp of
 # the POMO file accordingly.
 
-#--- Check environment ---
-if [ "$(uname)" == "Darwin" ] || [ "${POMO_PREFIX_CMDS}" == "true" ]; then
-    # Use GNU coreutils installed with a prefix
-    DATE_CMD="gdate"
-    STAT_CMD="gstat"
-else
-    DATE_CMD="date"
-    STAT_CMD="stat"
-fi
-
 #--- Pomodoro functions ---
 
 function pomo_start {
@@ -306,6 +296,16 @@ POMO=${POMO_FILE:-"$HOME/.local/share/pomo"}
 WORK_TIME=${POMO_WORK_TIME:-25}
 BREAK_TIME=${POMO_BREAK_TIME:-5}
 MSG_CALLBACK=${POMO_MSG_CALLBACK:-pomo_msg_callback}
+
+#--- Check environment ---
+if [ "$(uname)" == "Darwin" ] || [ "${POMO_PREFIX_CMDS}" == "true" ]; then
+    # Use GNU coreutils installed with a prefix
+    DATE_CMD="gdate"
+    STAT_CMD="gstat"
+else
+    DATE_CMD="date"
+    STAT_CMD="stat"
+fi
 
 #--- Run! ---
 

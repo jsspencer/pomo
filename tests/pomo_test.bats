@@ -230,3 +230,10 @@ function notify-send() {
     _pomo_msg_helper 7 $((WORK_TIME*60-5)) $((WORK_TIME*60-2)) $((WORK_TIME*60))
     [[ "$output" == "Pomodoro End of a work period. Time for a break!" ]]
 }
+
+@test "config file can set POMO_PREFIX_CMDS" {
+    echo 'POMO_PREFIX_CMDS="true"' > "$POMO_CONFIG"
+    source pomo.sh
+    [[ "$DATE_CMD" == "gdate" ]]
+    [[ "$STAT_CMD" == "gstat" ]]
+}
