@@ -66,7 +66,12 @@ function pomo_ispaused {
 
 function pomo_pause {
     # Toggle the pause status on the POMO file.
+    pomo_update
     running=$(pomo_stat)
+    block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
+    if [[ $block_time -gt 0 && $running -ge $block_time ]]; then
+        running=$(( running % block_time ))
+    fi
     if pomo_isstopped || pomo_ispaused; then
         # Restart a stopped/paused pomo block by updating the time stamp of the POMO
         # file.
@@ -79,6 +84,8 @@ function pomo_pause {
 
 function pomo_update {
     # Update the time stamp on POMO a new cycle has started.
+    pomo_isstopped && return
+    pomo_ispaused && return
     running=$(pomo_stat)
     block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
     if [[ $running -ge $block_time ]]; then
@@ -106,6 +113,10 @@ function pomo_clock {
     if ! pomo_isstopped; then
         pomo_update
         running=$(pomo_stat)
+        block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
+        if [[ $block_time -gt 0 && $running -ge $block_time ]]; then
+            running=$(( running % block_time ))
+        fi
         left=$(( WORK_TIME*60 - running ))
         if [[ $left -lt 0 ]]; then
             left=$(( left + BREAK_TIME*60 ))

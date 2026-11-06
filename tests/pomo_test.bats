@@ -243,3 +243,11 @@ function notify-send() {
     [[ "$status" -eq 1 ]]
     [[ "$output" == "" ]]
 }
+
+@test "pomo_pause after multiple cycles does not produce negative clock" {
+    pomo_stamp 4200
+    pomo_pause
+    run pomo_clock
+    [[ ! "$output" =~ "-" ]]
+    [[ "$output" =~ "PW15:00" ]]
+}
