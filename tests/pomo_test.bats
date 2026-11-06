@@ -149,13 +149,13 @@ function notify-send() {
 @test "pomo_pause stops and starts the clock" {
     run pomo_stamp 1200
     run pomo_pause
-    sleep 5
+    sleep 2
     run pomo_stat
     [[ "$output" -eq 1200 ]]
     run pomo_pause
-    sleep 5
+    sleep 2
     run pomo_stat
-    [[ "$output" -eq 1205 ]]
+    [[ "$output" -eq 1202 ]]
 }
 
 @test "pomo_pause creates file if it was stopped before" {
@@ -207,27 +207,27 @@ function notify-send() {
 }
 
 @test "pomo_msg sends message about end of work block" {
-    _pomo_msg_helper 5 $((WORK_TIME*60-5)) $((WORK_TIME*60))
+    _pomo_msg_helper 2 $((WORK_TIME*60-2)) $((WORK_TIME*60))
     [[ "$output" == "Pomodoro End of a work period. Time for a break!" ]]
 }
 
 @test "pomo_msg sends message about end of break block" {
-    _pomo_msg_helper 5 $(( (WORK_TIME+BREAK_TIME)*60-5)) $(( (WORK_TIME+BREAK_TIME)*60))
+    _pomo_msg_helper 2 $(( (WORK_TIME+BREAK_TIME)*60-2)) $(( (WORK_TIME+BREAK_TIME)*60))
     [[ "$output" == "Pomodoro End of a break period. Time for work!" ]]
 }
 
 @test "pomo_msg handles timestamp update before it can send the end of break message 1" {
-    _pomo_msg_helper 5 $(( (WORK_TIME+BREAK_TIME)*60-5)) 0
+    _pomo_msg_helper 2 $(( (WORK_TIME+BREAK_TIME)*60-2)) 0
     [[ "$output" == "Pomodoro End of a break period. Time for work!" ]]
 }
 
 @test "pomo_msg handles timestamp update before it can send the end of break message 2" {
-    _pomo_msg_helper 5 $(( (WORK_TIME+BREAK_TIME)*60-5)) 1
+    _pomo_msg_helper 2 $(( (WORK_TIME+BREAK_TIME)*60-2)) 1
     [[ "$output" == "Pomodoro End of a break period. Time for work!" ]]
 }
 
 @test "pomo_msg handles being paused" {
-    _pomo_msg_helper 7 $((WORK_TIME*60-5)) $((WORK_TIME*60-2)) $((WORK_TIME*60))
+    _pomo_msg_helper 3 $((WORK_TIME*60-2)) $((WORK_TIME*60-1)) $((WORK_TIME*60))
     [[ "$output" == "Pomodoro End of a work period. Time for a break!" ]]
 }
 
