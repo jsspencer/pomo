@@ -52,8 +52,8 @@ function pomo_stop {
 
 function pomo_stamp {
     # Set the timestamp of the POMO file to $1 seconds ago.
-    ago=$1
-    mtime=$(${DATE_CMD} --date "@$(( $(${DATE_CMD} +%s) - ago))" +%Y%m%d%H%M.%S)
+    local ago=$1
+    local mtime=$(${DATE_CMD} --date "@$(( $(${DATE_CMD} +%s) - ago))" +%Y%m%d%H%M.%S)
     test -e "$(dirname -- "$POMO")" || mkdir -p "$(dirname -- "$POMO")"
     :> "$POMO" # erase saved time stamp due to a pause.
     touch -m -t "$mtime" "$POMO"
@@ -68,8 +68,8 @@ function pomo_ispaused {
 function pomo_pause {
     # Toggle the pause status on the POMO file.
     pomo_update
-    running=$(pomo_stat)
-    block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
+    local running=$(pomo_stat)
+    local block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
     if [[ $block_time -gt 0 && $running -ge $block_time ]]; then
         running=$(( running % block_time ))
     fi
@@ -87,21 +87,22 @@ function pomo_update {
     # Update the time stamp on POMO a new cycle has started.
     pomo_isstopped && return
     pomo_ispaused && return
-    running=$(pomo_stat)
-    block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
+    local running=$(pomo_stat)
+    local block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
     if [[ $running -ge $block_time ]]; then
-        ago=$(( running % block_time )) # We should've started the new cycle a while ago?
-        mtime=$(${DATE_CMD} --date "@$(( $(${DATE_CMD} +%s) - ago))" +%Y%m%d%H%M.%S)
+        local ago=$(( running % block_time )) # We should've started the new cycle a while ago?
+        local mtime=$(${DATE_CMD} --date "@$(( $(${DATE_CMD} +%s) - ago))" +%Y%m%d%H%M.%S)
         touch -m -t "$mtime" "$POMO"
     fi
 }
 
 function pomo_stat {
     # Return number of seconds since start of pomo block (work+break cycle).
-    [[ -e "$POMO" ]] && running=$(cat "$POMO") || running=0
+    local running=0
+    [[ -e "$POMO" ]] && running=$(cat "$POMO")
     if [[ -z $running ]]; then
-        pomo_start=$(${STAT_CMD} -c %Y "$POMO")
-        now=$(${DATE_CMD} +%s)
+        local pomo_start=$(${STAT_CMD} -c %Y "$POMO")
+        local now=$(${DATE_CMD} +%s)
         running=$((now-pomo_start))
     fi
     echo $running
@@ -113,12 +114,13 @@ function pomo_clock {
     # BMM:SS indicates MM:SS left in the break block.
     if ! pomo_isstopped; then
         pomo_update
-        running=$(pomo_stat)
-        block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
+        local running=$(pomo_stat)
+        local block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
         if [[ $block_time -gt 0 && $running -ge $block_time ]]; then
             running=$(( running % block_time ))
         fi
-        left=$(( WORK_TIME*60 - running ))
+        local left=$(( WORK_TIME*60 - running ))
+        local prefix
         if [[ $left -lt 0 ]]; then
             left=$(( left + BREAK_TIME*60 ))
             prefix=B
@@ -126,8 +128,8 @@ function pomo_clock {
             prefix=W
         fi
         pomo_ispaused && prefix=P$prefix
-        min=$(( left / 60 ))
-        sec=$(( left - 60*min ))
+        local min=$(( left / 60 ))
+        local sec=$(( left - 60*min ))
         printf "%2s%02d:%02d\n" $prefix $min $sec
     else
         printf "  --:--\n"
@@ -147,8 +149,11 @@ function pomo_msg {
     # is stopped mid-cycle.
     [[ -e "$POMO" ]] || return 1
     pomo_update
-    running=$(pomo_stat)
-    block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
+    local running=$(pomo_stat)
+    local block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
+    local left
+    local work
+    local stat
     while true; do
         [[ -e "$POMO" ]] || return 1
         if [[ $block_time -gt 0 && $running -ge $block_time ]]; then
@@ -197,21 +202,22 @@ function pomo_notify {
 }
 
 function pomo_msg_callback {
-    block_type=$1
+    local block_type=$1
+    local msg
     if [[ $block_type -eq 0 ]]; then
         msg='End of a work period. Time for a break!'
     elif [[ $block_type -eq 1 ]]; then
         msg='End of a break period. Time for work!'
     else
         echo "Unknown block type"
-        exit 1
+        return 1
     fi
     send_msg "$msg"
 }
 
 function send_msg {
     if [ "$(uname)" == "Darwin" ]; then
-        osascript -e "tell app \"System Events\" to display dialog \"${1}\"" &> /dev/null
+        osascript -e "display notification \"${1//\"/\\\"}\" with title \"Pomodoro\"" > /dev/null 2>&1
     elif command -v notify-send &> /dev/null; then
         notify-send -a "Pomodoro" "${1}"
     else
