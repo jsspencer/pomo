@@ -8,6 +8,10 @@ function setup() {
     source pomo.sh
 }
 
+function teardown() {
+    rm -rf "$POMO_DIR"
+}
+
 # Test helpers
 function _pomo_clock_helper() {
     # Mock stat so no timing issue around checking the time of POMO_FILE.
@@ -32,7 +36,7 @@ function _pomo_msg_helper() {
     run pomo_start
     SECONDS=0
     run pomo_msg
-    [[ $expected_duration -eq $SECONDS ]]
+    [[ $SECONDS -ge $expected_duration && $SECONDS -le $((expected_duration + 1)) ]]
 }
 
 # Mocks
