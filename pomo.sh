@@ -282,32 +282,37 @@ which is sourced if it exists.
 END
 }
 
-#--- Command-line interface ---
+#--- Configuration (can be set via environment variables or config file) ---
 
 action=
 config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
 config=${POMO_CONFIG:-"$config_home/pomo.cfg"}
-while getopts "hc:" arg; do
-    case $arg in
-	c)
-	    config=$OPTARG
-	    ;;
-        h|?)
-            action=usage
-            ;;
-    esac
-done
-shift $((OPTIND-1))
 
-actions="start stop pause clock usage notify status"
-for act in $actions; do
-    if [[ $act == "$1" ]]; then
-        action=$act
-        break
+#--- Command-line interface ---
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    while getopts "hc:" arg; do
+        case $arg in
+            c)
+                config=$OPTARG
+                ;;
+            h|?)
+                action=usage
+                ;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    if [[ -z $action ]]; then
+        actions="start stop pause clock usage notify status"
+        for act in $actions; do
+            if [[ $act == "$1" ]]; then
+                action=$act
+                break
+            fi
+        done
     fi
-done
-
-#--- Configuration (can be set via environment variables) ---
+fi
 
 [[ -e ${config} ]] && source "${config}"
 POMO=${POMO_FILE:-"$HOME/.local/share/pomo"}
@@ -327,9 +332,12 @@ fi
 
 #--- Run! ---
 
-if [[ -n $action ]]; then
-    pomo_"$action"
-else
-    [[ $# -gt 0 ]] && echo "Unknown option/action: $1." || echo "Action not supplied."
-    pomo_usage
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    if [[ -n $action ]]; then
+        pomo_"$action"
+    else
+        [[ $# -gt 0 ]] && echo "Unknown option/action: $1." || echo "Action not supplied."
+        pomo_usage
+        exit 1
+    fi
 fi

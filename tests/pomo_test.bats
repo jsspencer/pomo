@@ -283,3 +283,22 @@ function notify-send() {
     run pomo_msg
     [[ "$status" -eq 1 ]]
 }
+
+@test "pomo.sh with invalid action returns exit code 1" {
+    run ./pomo.sh invalid_action
+    [[ "$status" -eq 1 ]]
+    [[ "$output" =~ "Unknown option/action: invalid_action." ]]
+}
+
+@test "pomo.sh -h start displays usage and does not start timer" {
+    run ./pomo.sh -h start
+    [[ "$status" -eq 0 ]]
+    [[ "$output" =~ "pomo.sh - a simple Pomodoro timer." ]]
+    [[ ! -e "$POMO_FILE" ]]
+}
+
+@test "sourcing pomo.sh directly produces no stdout or stderr" {
+    run bash -c "source ./pomo.sh"
+    [[ "$status" -eq 0 ]]
+    [[ "$output" == "" ]]
+}
