@@ -258,3 +258,28 @@ function notify-send() {
     [[ "$status" -eq 0 ]]
     [[ -e "$POMO" ]]
 }
+
+@test "pomo_msg returns 1 if pomo is stopped while waiting" {
+    pomo_start
+    iteration_file=$(mktemp --tmpdir="$BATS_RUN_TMPDIR")
+    echo 0 > "$iteration_file"
+    function pomo_stat() {
+        stat_iter=$(cat "$iteration_file")
+        if [[ $stat_iter -eq 0 ]]; then
+            echo 100
+        else
+            rm -f "$POMO"
+            echo 0
+        fi
+        echo $((stat_iter + 1)) > "$iteration_file"
+    }
+    function sleep() {
+        loop_count=$(cat "$iteration_file")
+        if [[ $loop_count -gt 2 ]]; then
+            exit 42
+        fi
+    }
+    export -f sleep
+    run pomo_msg
+    [[ "$status" -eq 1 ]]
+}

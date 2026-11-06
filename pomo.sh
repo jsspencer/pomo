@@ -143,19 +143,26 @@ function pomo_status {
 
 function pomo_msg {
     # Send a message using the GUI or console at the end of the next
-    # work or break block.  This requires a Pomodoro session to
-    # have already been started...
+    # work or break block. Returns 1 if the session is not running or
+    # is stopped mid-cycle.
     [[ -e "$POMO" ]] || return 1
     pomo_update
     running=$(pomo_stat)
+    block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
     while true; do
+        [[ -e "$POMO" ]] || return 1
+        if [[ $block_time -gt 0 && $running -ge $block_time ]]; then
+            running=$(( running % block_time ))
+        fi
         left=$(( WORK_TIME*60 - running ))
         work=true
         if [[ $left -lt 0 ]]; then
             left=$(( left + BREAK_TIME*60 ))
             work=false
         fi
+        [[ $left -lt 0 ]] && left=0
         sleep $left
+        [[ -e "$POMO" ]] || return 1
         # pomo_stat is time from the start of the work+block cycle.
         # 1. If switching from work->break then stat >= running + left.
         # 2. If switching from break->work then either
