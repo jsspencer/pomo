@@ -251,3 +251,10 @@ function notify-send() {
     [[ ! "$output" =~ "-" ]]
     [[ "$output" =~ "PW15:00" ]]
 }
+
+@test "pomo_stamp creates parent directory if it does not exist" {
+    POMO="$POMO_DIR/nested/sub/pomo"
+    run pomo_stamp 100
+    [[ "$status" -eq 0 ]]
+    [[ -e "$POMO" ]]
+}

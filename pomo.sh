@@ -54,6 +54,7 @@ function pomo_stamp {
     # Set the timestamp of the POMO file to $1 seconds ago.
     ago=$1
     mtime=$(${DATE_CMD} --date "@$(( $(${DATE_CMD} +%s) - ago))" +%m%d%H%M.%S)
+    test -e "$(dirname -- "$POMO")" || mkdir -p "$(dirname -- "$POMO")"
     :> "$POMO" # erase saved time stamp due to a pause.
     touch -m -t "$mtime" "$POMO"
 }
