@@ -33,8 +33,8 @@
 
 function pomo_start {
     # Start new pomo block (work+break cycle).
+    rm -f "$POMO"
     test -e "$(dirname -- "$POMO")" || mkdir -p "$(dirname -- "$POMO")"
-    :> "$POMO" # remove saved time stamp due to a pause.
     touch "$POMO"
 }
 
@@ -149,6 +149,7 @@ function pomo_msg {
     # is stopped mid-cycle.
     [[ -e "$POMO" ]] || return 1
     pomo_update
+    local initial_inode=$(${STAT_CMD} -c %i "$POMO")
     local running=$(pomo_stat)
     local block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
     local left
@@ -168,6 +169,11 @@ function pomo_msg {
         [[ $left -lt 0 ]] && left=0
         sleep $left
         [[ -e "$POMO" ]] || return 1
+        # Check if the POMO file was recreated while sleeping (e.g. stopped
+        # or restarted with a new session). If the inode changed, this wait
+        # belongs to a previous session and we should exit without notifying.
+        local current_inode=$(${STAT_CMD} -c %i "$POMO" 2>/dev/null)
+        [[ "$current_inode" == "$initial_inode" ]] || return 1
         # pomo_stat is time from the start of the work+block cycle.
         # 1. If switching from work->break then stat >= running + left.
         # 2. If switching from break->work then either

@@ -40,6 +40,15 @@ function _pomo_msg_helper() {
 }
 
 # Mocks
+function sleep() {
+    if [[ -n "$TEST_SLEEP_HOOK" ]]; then
+        eval "$TEST_SLEEP_HOOK"
+    else
+        command sleep "$@"
+    fi
+}
+export -f sleep
+
 function notify-send() {
     # Mock notify-send to echo.
     # We set the app-name to notify send using -a, which is not a valid option
@@ -273,15 +282,40 @@ function notify-send() {
         fi
         echo $((stat_iter + 1)) > "$iteration_file"
     }
-    function sleep() {
+    TEST_SLEEP_HOOK='
         loop_count=$(cat "$iteration_file")
         if [[ $loop_count -gt 2 ]]; then
             exit 42
         fi
-    }
-    export -f sleep
+    '
     run pomo_msg
     [[ "$status" -eq 1 ]]
+}
+
+@test "pomo_msg does not send notification if pomo is stopped and restarted while waiting" {
+    msg_sent_file=$(mktemp --tmpdir="$BATS_RUN_TMPDIR")
+    function send_msg() { echo "$1" > "$msg_sent_file"; }
+    export -f send_msg
+    TEST_SLEEP_HOOK="pomo_stop; pomo_start"
+    # Start timer in a break block (1600s into 1800s cycle)
+    pomo_stamp 1600
+    run pomo_msg
+    [[ "$status" -eq 1 ]]
+    [[ ! -s "$msg_sent_file" ]]
+}
+
+@test "pomo_msg does not send notification if pomo is restarted with pomo start while waiting" {
+    msg_sent_file=$(mktemp --tmpdir="$BATS_RUN_TMPDIR")
+    function send_msg() { echo "$1" > "$msg_sent_file"; }
+    export -f send_msg
+    TEST_SLEEP_HOOK="pomo_start; pomo_stamp 50"
+    # 3-minute work, 1-minute break: enter break period (181s)
+    WORK_TIME=3
+    BREAK_TIME=1
+    pomo_stamp 181
+    run pomo_msg
+    [[ "$status" -eq 1 ]]
+    [[ ! -s "$msg_sent_file" ]]
 }
 
 @test "pomo.sh with invalid action returns exit code 1" {
