@@ -17,10 +17,12 @@ full path.
 Usage
 -----
 
-pomo.sh [-h] [start | stop | pause | restart | clock | notify | usage]
+pomo.sh [-h] [-c file] [start | stop | pause | clock | status | notify | usage]
 
 Options:
 
+\-c file
+    Specify the path to the config file containing variable definitions.
 \-h
     Print usage message.
 
@@ -31,17 +33,18 @@ start
 stop
     Stop Pomodoro timer.
 pause
-    Pause Pomodoro timer.
-restart
-    Restart a paused Pomodoro timer.
+    Pause a running Pomodoro timer or resume a paused Pomodoro timer (toggles pause state).
 clock
     Print how much time (minutes and seconds) is remaining in the current
     Pomodoro cycle.  A prefix of B indicates a break period, a prefix of
     W indicates a work period and a prefix of P indicates the current period is
     paused.
+status
+    Continuously print the current status of the Pomodoro timer once a second,
+    in the same format as the clock action.
 notify
     Raise a notification at the end of every Pomodoro work and break block (requires
-    notify-send).   Note that this action (unlike all others) does not
+    notify-send on Linux or osascript on macOS). Note that this action (unlike all others) does not
     terminate and is best run in the background.
 usage
     Print this usage message.
