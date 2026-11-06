@@ -237,3 +237,9 @@ function notify-send() {
     [[ "$DATE_CMD" == "gdate" ]]
     [[ "$STAT_CMD" == "gstat" ]]
 }
+
+@test "pomo_ispaused produces no stderr when stopped" {
+    run pomo_ispaused
+    [[ "$status" -eq 1 ]]
+    [[ "$output" == "" ]]
+}

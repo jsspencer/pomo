@@ -61,8 +61,7 @@ function pomo_stamp {
 function pomo_ispaused {
     # Return 0 if paused, 1 otherwise.
     # pomo.sh is paused if the POMO file contains any information.
-    [[ $(wc -l < "$POMO") -gt 0 ]]
-    return $?
+    [[ -s "$POMO" ]]
 }
 
 function pomo_pause {
