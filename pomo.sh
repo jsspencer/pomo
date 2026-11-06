@@ -53,7 +53,7 @@ function pomo_stop {
 function pomo_stamp {
     # Set the timestamp of the POMO file to $1 seconds ago.
     ago=$1
-    mtime=$(${DATE_CMD} --date "@$(( $(date +%s) - ago))" +%m%d%H%M.%S)
+    mtime=$(${DATE_CMD} --date "@$(( $(${DATE_CMD} +%s) - ago))" +%m%d%H%M.%S)
     :> "$POMO" # erase saved time stamp due to a pause.
     touch -m -t "$mtime" "$POMO"
 }
@@ -84,7 +84,7 @@ function pomo_update {
     block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
     if [[ $running -ge $block_time ]]; then
         ago=$(( running % block_time )) # We should've started the new cycle a while ago?
-        mtime=$(${DATE_CMD} --date "@$(( $(date +%s) - ago))" +%m%d%H%M.%S)
+        mtime=$(${DATE_CMD} --date "@$(( $(${DATE_CMD} +%s) - ago))" +%m%d%H%M.%S)
         touch -m -t "$mtime" "$POMO"
     fi
 }
@@ -93,7 +93,7 @@ function pomo_stat {
     # Return number of seconds since start of pomo block (work+break cycle).
     [[ -e "$POMO" ]] && running=$(cat "$POMO") || running=0
     if [[ -z $running ]]; then
-        pomo_start=$(${STAT_CMD} -c +%Y "$POMO")
+        pomo_start=$(${STAT_CMD} -c %Y "$POMO")
         now=$(${DATE_CMD} +%s)
         running=$((now-pomo_start))
     fi
