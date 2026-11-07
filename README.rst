@@ -54,7 +54,8 @@ Environment variables:
 POMO_FILE
     Location of the Pomodoro file used to store the duration of the Pomodoro
     period (mostly using timestamps).  Multiple Pomodoro timers can be run by
-    using different files.  Default: $HOME/.local/share/pomo.
+    using different files.  Default: $XDG_DATA_HOME/pomo (falls back to
+    $HOME/.local/share/pomo).
 POMO_WORK_TIME
     Duration of the work period in minutes.  Default: 25.
 POMO_BREAK_TIME

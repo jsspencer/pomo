@@ -247,6 +247,20 @@ function notify-send() {
     [[ "$STAT_CMD" == "gstat" ]]
 }
 
+@test "default POMO location uses XDG_DATA_HOME" {
+    unset POMO_FILE
+    export XDG_DATA_HOME="$POMO_DIR/custom_data"
+    source pomo.sh
+    [[ "$POMO" == "$POMO_DIR/custom_data/pomo" ]]
+}
+
+@test "default POMO location falls back to .local/share when XDG_DATA_HOME is unset" {
+    unset POMO_FILE
+    unset XDG_DATA_HOME
+    source pomo.sh
+    [[ "$POMO" == "$HOME/.local/share/pomo" ]]
+}
+
 @test "pomo_ispaused produces no stderr when stopped" {
     run pomo_ispaused
     [[ "$status" -eq 1 ]]

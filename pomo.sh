@@ -282,7 +282,8 @@ POMO_CONFIG
 POMO_FILE
     Location of the Pomodoro file used to store the duration of the Pomodoro
     period (mostly using timestamps).  Multiple Pomodoro timers can be run by
-    using different files.  Default: \$HOME/.local/share/pomo.
+    using different files.  Default: \$XDG_DATA_HOME/pomo (falls back to
+    \$HOME/.local/share/pomo).
 POMO_WORK_TIME
     Duration of the work period in minutes.  Default: 25.
 POMO_BREAK_TIME
@@ -301,6 +302,7 @@ END
 action=
 config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
 config=${POMO_CONFIG:-"$config_home/pomo.cfg"}
+data_home=${XDG_DATA_HOME:-"$HOME/.local/share"}
 
 #--- Command-line interface ---
 
@@ -329,7 +331,8 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 fi
 
 [[ -e ${config} ]] && source "${config}"
-POMO=${POMO_FILE:-"$HOME/.local/share/pomo"}
+data_home=${XDG_DATA_HOME:-"$data_home"}
+POMO=${POMO_FILE:-"$data_home/pomo"}
 WORK_TIME=${POMO_WORK_TIME:-25}
 BREAK_TIME=${POMO_BREAK_TIME:-5}
 MSG_CALLBACK=${POMO_MSG_CALLBACK:-pomo_msg_callback}
