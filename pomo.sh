@@ -33,9 +33,10 @@
 
 function pomo_start {
     # Start new pomo block (work+break cycle).
-    rm -f "$POMO"
+    rm -f "$POMO" "${POMO}.session"
     test -e "$(dirname -- "$POMO")" || mkdir -p "$(dirname -- "$POMO")"
     touch "$POMO"
+    echo "$$ $RANDOM $(${DATE_CMD} +%s 2>/dev/null)" > "${POMO}.session"
 }
 
 function pomo_isstopped {
@@ -47,7 +48,7 @@ function pomo_isstopped {
 
 function pomo_stop {
     # Stop pomo cycles.
-    rm -f "$POMO"
+    rm -f "$POMO" "${POMO}.session"
 }
 
 function pomo_stamp {
@@ -149,7 +150,10 @@ function pomo_msg {
     # is stopped mid-cycle.
     [[ -e "$POMO" ]] || return 1
     pomo_update
-    local initial_inode=$(${STAT_CMD} -c %i "$POMO")
+    if [[ ! -f "${POMO}.session" ]]; then
+        echo "$$ $RANDOM $(${DATE_CMD} +%s 2>/dev/null)" > "${POMO}.session"
+    fi
+    local initial_session=$(cat "${POMO}.session" 2>/dev/null)
     local running=$(pomo_stat)
     local block_time=$(( (WORK_TIME+BREAK_TIME)*60 ))
     local left
@@ -169,11 +173,9 @@ function pomo_msg {
         [[ $left -lt 0 ]] && left=0
         sleep $left
         [[ -e "$POMO" ]] || return 1
-        # Check if the POMO file was recreated while sleeping (e.g. stopped
-        # or restarted with a new session). If the inode changed, this wait
-        # belongs to a previous session and we should exit without notifying.
-        local current_inode=$(${STAT_CMD} -c %i "$POMO" 2>/dev/null)
-        [[ "$current_inode" == "$initial_inode" ]] || return 1
+        # Check if the POMO session was stopped or restarted while sleeping.
+        local current_session=$(cat "${POMO}.session" 2>/dev/null)
+        [[ -n "$current_session" && "$current_session" == "$initial_session" ]] || return 1
         # pomo_stat is time from the start of the work+block cycle.
         # 1. If switching from work->break then stat >= running + left.
         # 2. If switching from break->work then either
