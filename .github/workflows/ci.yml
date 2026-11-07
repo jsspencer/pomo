@@ -1,15 +1,14 @@
 name: "CI"
 on: [push, pull_request]
+
 jobs:
   build:
     name: build
     runs-on: ubuntu-latest
     steps:
-      - name: Setup BATS
-        uses: mig4/setup-bats@v1
-        with:
-          bats-version: 1.2.1
       - name: Check out code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
+      - name: Setup BATS
+        uses: bats-core/bats-action@4.1.0
       - name: Test
         run: bats -r .
